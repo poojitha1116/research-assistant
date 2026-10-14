@@ -1,0 +1,11 @@
+{
+  "name": "research-assistant",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "models": "node --env-file=.env src/listModels.js",
+    "test:llm": "node --env-file=.env src/testLlm.js",
+    "test:search": "node --env-file=.env src/testSearch.js"
+  },
+  "engines": { "node": ">=22" }
+}
