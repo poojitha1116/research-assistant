@@ -5,7 +5,15 @@
   "scripts": {
     "models": "node --env-file=.env src/listModels.js",
     "test:llm": "node --env-file=.env src/testLlm.js",
-    "test:search": "node --env-file=.env src/testSearch.js"
+    "test:search": "node --env-file=.env src/testSearch.js",
+    "test:helpers": "node --env-file=.env src/testHelpers.js",
+    "ask": "node --env-file=.env src/index.js"
   },
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "jsdom": "^30.1.2"
+  }
 }
