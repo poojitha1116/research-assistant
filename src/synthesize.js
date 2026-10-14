@@ -7,8 +7,7 @@ function parseJson(text) {
 
 const asList = (x) => (Array.isArray(x) ? x.map(String).filter(Boolean) : []);
 
-// The citation guard: only source numbers that really exist are allowed through.
-// It also caps confidence when key points rest only on search snippets.
+// The guard: only real source numbers pass, and confidence is capped by evidence quality.
 function validate(raw, sources) {
   const valid = new Set(sources.map((s) => s.id));
   const snippetIds = new Set(sources.filter((s) => s.via === 'snippet').map((s) => s.id));
@@ -36,11 +35,18 @@ function validate(raw, sources) {
 
   let confidence = ['high', 'medium', 'low'].includes(raw.confidence) ? raw.confidence : 'low';
   const caveats = asList(raw.caveats);
+  const missingParts = asList(raw.missing_parts);
 
+  // Cap 1: key points that rest only on search snippets.
   const snippetOnlyPoints = keyPoints.filter((kp) => kp.sources.every((id) => snippetIds.has(id))).length;
   if (snippetOnlyPoints > 0) {
     caveats.push(`${snippetOnlyPoints} key point(s) rest only on search snippets, not full pages.`);
     if (confidence === 'high') confidence = 'medium';
+  }
+
+  // Cap 2: parts of the question the sources do not answer.
+  if (answerable && missingParts.length > 0 && confidence === 'high') {
+    confidence = 'medium';
   }
 
   return {
@@ -50,6 +56,7 @@ function validate(raw, sources) {
       key_points: keyPoints,
       conflicts: asList(raw.conflicts),
       caveats,
+      missing_parts: missingParts,
       recommendation: String(raw.recommendation ?? ''),
       confidence,
     },
@@ -77,6 +84,7 @@ export async function synthesize(question, sources, trace) {
         droppedCitations,
         uncitedPoints,
         snippetOnlyPoints,
+        missingParts: answer.missing_parts.length,
         ms: Date.now() - t0,
       });
       return answer;

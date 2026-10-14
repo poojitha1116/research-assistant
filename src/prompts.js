@@ -24,11 +24,14 @@ Answer the question using ONLY the numbered sources below. Do not use outside kn
 Rules:
 - Every key point must list the source numbers that support it.
 - Ignore sources that are off-topic. Do not cite them.
-- If sources disagree, describe the disagreement in "conflicts".
+- If sources disagree, describe the disagreement in "conflicts". When they disagree about a current fact (such as which version is latest), prefer official or primary sources over blogs, and say in "conflicts" which source you trusted and why.
 - If sources look outdated or undated, say so in "caveats".
 - If the question asks about the latest, current or most recent version or state of something, check whether the sources really cover the newest one. If they only cover an older version, begin the summary by saying so, set "confidence" to "low", and do not present the older version as the answer.
+- If the question asks about a "latest release", distinguish a version that has been released (stable) from one still in development or pre-release, and say clearly which one the sources describe.
+- Prefer full-page sources. Do not use "high" confidence if an important claim rests only on snippet-only sources.
+- Split the question into the things it asks for. List every part that the sources do NOT answer in "missing_parts". Do not fill that gap with information about a different version, topic or time period: mention it only as background, and say so.
 - If the sources do not actually answer the question, set "answerable" to false, explain why in "summary", and leave "key_points" empty.
-- "confidence" is "high" only if several relevant, current sources agree. Use "low" if the evidence is thin, dated or conflicting.
+- "confidence" is "high" only if several relevant, current sources agree and "missing_parts" is empty. Use "low" if the evidence is thin, dated or conflicting.
 
 Question: ${question}
 
@@ -42,6 +45,7 @@ Respond with JSON only, in exactly this shape:
   "key_points": [{"point": "a specific claim", "sources": [1, 3]}],
   "conflicts": ["where sources disagree, or leave the list empty"],
   "caveats": ["limits, stale sources, missing info"],
+  "missing_parts": ["parts of the question the sources do not answer, or leave the list empty"],
   "recommendation": "a short practical recommendation, or an empty string if not applicable",
   "confidence": "high | medium | low"
 }`;

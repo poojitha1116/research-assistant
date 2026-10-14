@@ -43,7 +43,10 @@ function printAnswer(answer, sources) {
     console.log('\nCAVEATS');
     answer.caveats.forEach((c) => console.log(` - ${c}`));
   }
-  if (answer.recommendation) console.log(`\nRECOMMENDATION\n${answer.recommendation}`);
+    if (answer.missing_parts?.length) {
+    console.log('\nNOT COVERED BY THE SOURCES');
+    answer.missing_parts.forEach((c) => console.log(` - ${c}`));
+  }
 
   if (answer.answerable) console.log(`\nCONFIDENCE: ${answer.confidence}`);
 
