@@ -1,12 +1,10 @@
 const KEY = process.env.GEMINI_API_KEY;
-const MODEL = process.env.GEMINI_MODEL;
+const MODELS = [process.env.GEMINI_MODEL, process.env.GEMINI_FALLBACK_MODEL].filter(Boolean);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export async function callLLM(prompt, { json = false, retries = 3 } = {}) {
-  if (!KEY || !MODEL) throw new Error('GEMINI_API_KEY or GEMINI_MODEL is missing');
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+async function callModel(model, prompt, json, retries) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const body = { contents: [{ parts: [{ text: prompt }] }] };
   if (json) body.generationConfig = { responseMimeType: 'application/json' };
 
@@ -17,7 +15,7 @@ export async function callLLM(prompt, { json = false, retries = 3 } = {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': KEY },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(60000),
+        signal: AbortSignal.timeout(30000),
       });
       const data = await res.json();
 
@@ -35,8 +33,23 @@ export async function callLLM(prompt, { json = false, retries = 3 } = {}) {
       lastError = e;
       const retryable = e.retryable ?? (e.name === 'TimeoutError' || e.name === 'TypeError');
       if (!retryable || attempt === retries) break;
-      await sleep(1000 * 2 ** (attempt - 1)); // 1s, 2s, 4s...
+      await sleep(1000 * 2 ** (attempt - 1)); // 1s, 2s
     }
   }
   throw lastError;
+}
+
+// Tries each configured model in order. If one is overloaded, moves on to the next.
+export async function callLLM(prompt, { json = false, retries = 2 } = {}) {
+  if (!KEY || MODELS.length === 0) throw new Error('GEMINI_API_KEY or GEMINI_MODEL is missing');
+
+  const errors = [];
+  for (const model of MODELS) {
+    try {
+      return await callModel(model, prompt, json, retries);
+    } catch (e) {
+      errors.push(`${model}: ${e.message}`);
+    }
+  }
+  throw new Error(`All models failed. ${errors.join(' | ')}`);
 }

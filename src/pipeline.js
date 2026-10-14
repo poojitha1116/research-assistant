@@ -32,6 +32,20 @@ async function plan(question, trace) {
   }
 }
 
+
+// Treat tracking/language variants of the same page as one URL.
+function normalizeUrl(u) {
+  try {
+    const url = new URL(u);
+    url.hash = '';
+    for (const k of [...url.searchParams.keys()]) {
+      if (k.startsWith('utm_') || k === 'lang') url.searchParams.delete(k);
+    }
+    return url.toString().replace(/\/$/, '');
+  } catch {
+    return u;
+  }
+}
 export async function research(question, trace) {
   const queries = await plan(question, trace);
 
@@ -62,8 +76,8 @@ export async function research(question, trace) {
   for (let i = 0; i < 5; i++) {
     for (const list of lists) {
       const r = list[i];
-      if (r && !seen.has(r.url)) {
-        seen.add(r.url);
+        if (r && !seen.has(normalizeUrl(r.url))) {
+        seen.add(normalizeUrl(r.url));
         merged.push(r);
       }
     }
