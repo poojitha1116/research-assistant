@@ -1,0 +1,43 @@
+﻿
+> research-assistant@1.0.0 ask
+> node --env-file=.env src/index.js What changed in the latest Python release?
+
+  [96.2s] plan ok: 3 queries
+  [98.3s] search ok: "latest Python version release notes" -> 5 results
+  [100.1s] search ok: "new features in current Python version" -> 5 results
+  [101.6s] search ok: "changes in recent Python updates" -> 5 results
+  [101.9s] fetch FAILED: https://realpython.com/python314-new-features (HTTP 403)
+  [102.2s] fetch ok: https://docs.python.org/3/whatsnew/index.html (13661 chars)
+  [102.5s] fetch ok: https://www.python.org/downloads (2854 chars)
+  [103.5s] fetch ok: https://www.liquidweb.com/blog/latest-python-version (7464 chars)
+  [104.2s] fetch ok: https://wpexperts.io/blog/python-version-history (9693 chars)
+  [104.2s] fetch ok: https://devguide.python.org/versions (3852 chars)
+  [104.8s] fetch ok: https://www.nicholashairs.com/posts/major-changes-between-python-versions (19037 chars)
+  [105.0s] fetch ok: https://leadiq.com/c/python-software-foundation/5a1d98ce2300005c00876b4c (3641 chars)
+  [105.0s] sources: 8 total (7 pages, 1 snippets)
+  [202.5s] synthesize ok (attempt 1): answerable=true, cited 2 sources, dropped 0 bad citations, 0 uncited points
+
+------------------------------------------------------------
+QUESTION: What changed in the latest Python release?
+------------------------------------------------------------
+
+SUMMARY
+Python 3.14, released on October 7, 2025, focuses on performance optimizations and improved developer ergonomics. Key enhancements include deferred evaluation of annotations, support for subinterpreters, a new template string literal syntax, and improved REPL features like syntax highlighting and enhanced autocompletion.
+
+KEY POINTS
+ - Python 3.14 was officially released on October 7, 2025. [2, 5]
+ - Deferred evaluation of annotations improves startup time and reduces runtime overhead. [2]
+ - Support for subinterpreters allows for isolated execution within a single process to improve concurrency. [2, 5]
+ - The REPL now features default syntax highlighting, colorized tracebacks, and improved tab completion for import statements. [2, 5]
+ - New template string literals with ${var} syntax have been introduced for cleaner string interpolation. [2]
+ - Performance improvements include Zstandard compression support, tighter garbage collection scheduling, and optimized dictionary lookups. [2]
+
+CONFIDENCE: high
+
+SOURCES CITED
+ [2] The latest Python version: Python 3.14
+     https://www.liquidweb.com/blog/latest-python-version
+ [5] Python 3.14: Cool New Features for You to Try ΓÇô Real Python
+     https://realpython.com/python314-new-features
+
+Trace saved to traces\2026-10-15T11-18-57-819Z.json

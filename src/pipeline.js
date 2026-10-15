@@ -32,7 +32,6 @@ async function plan(question, trace) {
   }
 }
 
-
 // Treat tracking/language variants of the same page as one URL.
 function normalizeUrl(u) {
   try {
@@ -46,6 +45,20 @@ function normalizeUrl(u) {
     return u;
   }
 }
+
+// Heuristic: a source is "official" if its site's domain name is a word from the question
+// (python.org and docs.python.org for a Python question). Crude, but cheap and checkable.
+function isOfficial(url, question) {
+  try {
+    const parts = new URL(url).hostname.split('.');
+    const name = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
+    const words = question.toLowerCase().match(/[a-z0-9]{3,}/g) ?? [];
+    return words.includes(name);
+  } catch {
+    return false;
+  }
+}
+
 export async function research(question, trace) {
   const queries = await plan(question, trace);
 
@@ -69,14 +82,14 @@ export async function research(question, trace) {
     }
   }
 
-  // Interleave results from each query, and drop duplicate URLs,
+  // Interleave results from each query and drop duplicate URLs,
   // so the first query does not use up all the slots.
   const merged = [];
   const seen = new Set();
   for (let i = 0; i < 5; i++) {
     for (const list of lists) {
       const r = list[i];
-        if (r && !seen.has(normalizeUrl(r.url))) {
+      if (r && !seen.has(normalizeUrl(r.url))) {
         seen.add(normalizeUrl(r.url));
         merged.push(r);
       }
@@ -113,12 +126,19 @@ export async function research(question, trace) {
     })
   );
 
-  const sources = fetched.filter(Boolean).map((s, i) => ({ id: i + 1, ...s }));
+  // Official sources go first, then ids are assigned in that order.
+  const sources = fetched
+    .filter(Boolean)
+    .map((s) => ({ ...s, official: isOfficial(s.url, question) }))
+    .sort((a, b) => Number(b.official) - Number(a.official))
+    .map((s, i) => ({ id: i + 1, ...s }));
+
   trace.add({
     step: 'sources',
     total: sources.length,
     fromPages: sources.filter((s) => s.via === 'page').length,
     fromSnippets: sources.filter((s) => s.via === 'snippet').length,
+    official: sources.filter((s) => s.official).length,
   });
 
   return { queries, sources };

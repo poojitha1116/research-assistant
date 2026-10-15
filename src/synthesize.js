@@ -8,9 +8,10 @@ function parseJson(text) {
 const asList = (x) => (Array.isArray(x) ? x.map(String).filter(Boolean) : []);
 
 // The guard: only real source numbers pass, and confidence is capped by evidence quality.
-function validate(raw, sources) {
+function validate(raw, sources, question) {
   const valid = new Set(sources.map((s) => s.id));
   const snippetIds = new Set(sources.filter((s) => s.via === 'snippet').map((s) => s.id));
+  const officialIds = new Set(sources.filter((s) => s.official).map((s) => s.id));
   const droppedCitations = [];
   let uncitedPoints = 0;
 
@@ -49,6 +50,16 @@ function validate(raw, sources) {
     confidence = 'medium';
   }
 
+  // Cap 3: official sources were retrieved, but the answer cites none of them.
+  const citesOfficial = keyPoints.some((kp) => kp.sources.some((id) => officialIds.has(id)));
+  const noOfficialCited = answerable && officialIds.size > 0 && !citesOfficial;
+  if (noOfficialCited) {
+    caveats.push('Official sources were retrieved but none was cited. The answer rests on third-party sources.');
+    const asksLatest = /\b(latest|current|newest|most recent)\b/i.test(question);
+    if (asksLatest) confidence = 'low';
+    else if (confidence === 'high') confidence = 'medium';
+  }
+
   return {
     answer: {
       answerable,
@@ -63,6 +74,7 @@ function validate(raw, sources) {
     droppedCitations,
     uncitedPoints,
     snippetOnlyPoints,
+    noOfficialCited,
   };
 }
 
@@ -74,7 +86,11 @@ export async function synthesize(question, sources, trace) {
     const t0 = Date.now();
     try {
       const raw = parseJson(await callLLM(prompt, { json: true }));
-      const { answer, droppedCitations, uncitedPoints, snippetOnlyPoints } = validate(raw, sources);
+      const { answer, droppedCitations, uncitedPoints, snippetOnlyPoints, noOfficialCited } = validate(
+        raw,
+        sources,
+        question
+      );
       trace.add({
         step: 'synthesize',
         ok: true,
@@ -84,6 +100,7 @@ export async function synthesize(question, sources, trace) {
         droppedCitations,
         uncitedPoints,
         snippetOnlyPoints,
+        noOfficialCited,
         missingParts: answer.missing_parts.length,
         ms: Date.now() - t0,
       });
